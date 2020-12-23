@@ -1,11 +1,11 @@
 import Api from "../Api.js";
 
-class Home {
+class UpdateItem {
   el;
   isLoading = false;
 
   constructor() {
-    this.el = document.querySelector("#home");
+    this.el = document.querySelector("#update-item");
   }
 
   show = () => {
@@ -17,4 +17,4 @@ class Home {
   };
 }
 
-export default Home;
+export default UpdateItem;

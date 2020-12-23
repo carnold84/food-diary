@@ -95,12 +95,47 @@ textarea {
   display: flex;
 }
 
-.view {
+.route {
   display: none;
+  z-index: 0;
+}
+
+.route.show {
+  display: flex;
+}
+
+.view {
+  background-color: #b3d4fc;
+  display: none;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
 }
 
 .view.show {
   display: flex;
+}
+
+.view .message {
+  display: none;
+}
+
+.view .message.show {
+  display: flex;
+}
+
+#update-item {
+  z-index: 1;
+}
+
+#home .list {
+  display: none;
+}
+
+#home .list.show {
+  display: block;
 }
 
 /* ==========================================================================
