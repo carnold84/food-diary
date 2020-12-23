@@ -1,6 +1,7 @@
 import { API_URL, TOKEN_NAME } from "./config.js";
 
 class Api {
+  items;
   token = localStorage.getItem(TOKEN_NAME);
   user;
 
@@ -15,7 +16,7 @@ class Api {
     return await response.json();
   };
 
-  post = async (url, data, withAuth = true) => {
+  post = async (url, payload, withAuth = true) => {
     const headers = {
       "Content-Type": "application/json",
     };
@@ -25,9 +26,24 @@ class Api {
     }
 
     const response = await fetch(`${API_URL}${url}`, {
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
       headers,
       method: "POST",
+    });
+
+    return await response.json();
+  };
+
+  patch = async (url, payload) => {
+    const headers = {
+      Authorization: `Bearer ${this.token}`,
+      "Content-Type": "application/json",
+    };
+
+    const response = await fetch(`${API_URL}${url}`, {
+      body: JSON.stringify(payload),
+      headers,
+      method: "PATCH",
     });
 
     return await response.json();
@@ -41,7 +57,7 @@ class Api {
     return this.token;
   };
 
-  removeToken = (token) => {
+  removeToken = () => {
     localStorage.removeItem(TOKEN_NAME);
     this.token = null;
   };
@@ -59,10 +75,10 @@ class Api {
     this.user = user;
   };
 
-  signIn = async (credentials) => {
+  signIn = async (payload) => {
     const { data, error } = await this.post(
       "/auth/authenticate",
-      credentials,
+      payload,
       false
     );
 
@@ -83,7 +99,66 @@ class Api {
   };
 
   getItems = async () => {
-    return await this.get("/items/items");
+    // cached so return existing
+    if (this.items) {
+      return this.items.all;
+    } else {
+      const response = await this.get("/items/items");
+      let data;
+
+      if (response.data) {
+        this.items = {
+          all: [],
+          byId: {},
+        };
+
+        response.data.forEach((element) => {
+          this.items.all.push(element);
+          this.items.byId[element.id] = element;
+        });
+
+        data = this.items.all;
+      }
+
+      return {
+        data,
+        error: response.error,
+      };
+    }
+  };
+
+  createItem = async (payload) => {
+    const { data, error } = await this.post("/items/items", payload);
+
+    if (data) {
+      this.items.all.push(data);
+      this.items.byId[data.id] = data;
+    }
+
+    return {
+      success: !error,
+      error,
+    };
+  };
+
+  updateItem = async (id, payload) => {
+    const { data, error } = await this.patch(`/items/items/${id}`, payload);
+
+    if (data) {
+      this.items.all = this.items.all.map((element) => {
+        if (element.id === data.id) {
+          return data;
+        } else {
+          return element;
+        }
+      });
+      this.items.byId[data.id] = data;
+    }
+
+    return {
+      data,
+      error,
+    };
   };
 }
 

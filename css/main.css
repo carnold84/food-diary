@@ -88,7 +88,14 @@ textarea {
    ========================================================================== */
 
 .loading {
+  background-color: rgb(146, 169, 180);
   display: none;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 10;
 }
 
 .loading.show {
@@ -104,6 +111,14 @@ textarea {
   display: flex;
 }
 
+.route .message {
+  display: none;
+}
+
+.route .message.show {
+  display: flex;
+}
+
 .view {
   background-color: #b3d4fc;
   display: none;
@@ -115,14 +130,6 @@ textarea {
 }
 
 .view.show {
-  display: flex;
-}
-
-.view .message {
-  display: none;
-}
-
-.view .message.show {
   display: flex;
 }
 

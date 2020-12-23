@@ -18,7 +18,7 @@ class App {
     window.addEventListener(EVENTS.LOAD, this.onLoad);
     window.addEventListener(EVENTS.ROUTE_CHANGE, this.onRouteChange);
     window.addEventListener(EVENTS.SHOW_LOADING, this.onShowLoading);
-    window.addEventListener(EVENTS.VIEW_CHANGE, this.onViewChange);
+    window.addEventListener(EVENTS.TOGGLE_VIEW, this.onViewChange);
 
     this.elAddItemBtn = document.querySelector("#add-item-btn");
     this.elAddItemBtn.addEventListener("click", this.onAddItem);
@@ -34,7 +34,8 @@ class App {
   onAddItem = (evt) => {
     evt.preventDefault();
 
-    dispatch(EVENTS.VIEW_CHANGE, {
+    dispatch(EVENTS.TOGGLE_VIEW, {
+      show: true,
       view: VIEWS.UPDATE_ITEM,
     });
   };
@@ -62,9 +63,9 @@ class App {
     this.setRoute({ params, route });
   };
 
-  onViewChange = ({ detail: { params, view } }) => {
-    console.log("onViewChange:", params, view);
-    this.setView({ params, view });
+  onViewChange = ({ detail: { params, show, view } }) => {
+    console.log("onViewChange:", params, show, view);
+    this.setView({ params, show, view });
   };
 
   onShowLoading = ({ detail }) => {
@@ -89,9 +90,13 @@ class App {
     }
   };
 
-  setView = ({ params, view }) => {
+  setView = ({ params, show, view }) => {
     if (view === VIEWS.UPDATE_ITEM) {
-      this.updateItem.show(params);
+      if (show) {
+        this.updateItem.show(params);
+      } else {
+        this.updateItem.hide();
+      }
     }
   };
 }

@@ -2,7 +2,7 @@ export const EVENTS = {
   LOAD: "load",
   ROUTE_CHANGE: "routechange",
   SHOW_LOADING: "showloading",
-  VIEW_CHANGE: "viewchange",
+  TOGGLE_VIEW: "toggleview",
 };
 
 export const ROUTES = {

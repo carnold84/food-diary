@@ -4,7 +4,7 @@ import { dispatch } from "../utils.js";
 
 class SignIn {
   el;
-  elSignInForm;
+  elForm;
   isLoading = false;
 
   constructor() {
@@ -12,15 +12,15 @@ class SignIn {
   }
 
   show = () => {
-    this.elSignInForm = this.el.querySelector("#sign-in-form");
-    this.elSignInForm.addEventListener("submit", this.onSignIn);
+    this.elForm = this.el.querySelector("#sign-in-form");
+    this.elForm.addEventListener("submit", this.onSignIn);
 
     this.el.classList.add("show");
   };
 
   hide = () => {
-    if (this.elSignInForm) {
-      this.elSignInForm.removeEventListener("submit", this.onSignIn);
+    if (this.elForm) {
+      this.elForm.removeEventListener("submit", this.onSignIn);
     }
 
     this.el.classList.remove("show");
@@ -33,8 +33,8 @@ class SignIn {
     dispatch(EVENTS.SHOW_LOADING, true);
 
     const credentials = {
-      email: this.elSignInForm.querySelector("[name=email]").value,
-      password: this.elSignInForm.querySelector("[name=password]").value,
+      email: this.elForm.querySelector("[name=email]").value,
+      password: this.elForm.querySelector("[name=password]").value,
     };
 
     const { error, success } = await Api.signIn(credentials);
