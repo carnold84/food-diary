@@ -59,11 +59,19 @@
           <input name="date" type="date" />
           <input type="submit" value="Save" />
         </form>
+        <button id="cancel-btn">Cancel</button>
       </div>
     </div>
 
-    <template id="item">
-      <li class="item"></li>
+    <!-- TEMPLATE:ITEM -->
+    <template id="template-item">
+      <li class="item">
+        <p class="item-title"></p>
+        <div class="item-control">
+          <button class="item-delete-btn">Delete</button>
+          <button class="item-edit-btn">Edit</button>
+        </div>
+      </li>
     </template>
 
     <script src="js/vendor/modernizr-3.11.2.min.js"></script>

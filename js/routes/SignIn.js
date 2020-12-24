@@ -27,7 +27,6 @@ class SignIn {
   };
 
   onSignIn = async (evt) => {
-    console.log(evt);
     evt.preventDefault();
 
     dispatch(EVENTS.SHOW_LOADING, true);

@@ -5,19 +5,27 @@ import { dispatch } from "../utils.js";
 class UpdateItem {
   currentItem = null;
   el;
+  elCancelBtn;
   elForm;
   isLoading = false;
 
   constructor() {
     this.el = document.querySelector("#update-item");
     this.elForm = this.el.querySelector("#update-item-form");
+    this.elCancelBtn = this.el.querySelector("#cancel-btn");
   }
 
   show = (params = {}) => {
     this.el.classList.add("show");
+    console.log(params);
 
-    this.currentItem = params.item;
+    if (params.id) {
+      this.currentItem = Api.getItem(params.id);
+      this.elForm.querySelector("[name=name]").value = this.currentItem.name;
+      this.elForm.querySelector("[name=date]").value = this.currentItem.date;
+    }
 
+    this.elCancelBtn.addEventListener("click", this.onCancel);
     this.elForm.addEventListener("submit", this.onUpdateItem);
   };
 
@@ -31,6 +39,10 @@ class UpdateItem {
     this.el.classList.remove("show");
   };
 
+  onCancel = () => {
+    dispatch(EVENTS.TOGGLE_VIEW, { view: VIEWS.UPDATE_ITEM, show: false });
+  };
+
   onUpdateItem = async (evt) => {
     evt.preventDefault();
 
@@ -41,18 +53,18 @@ class UpdateItem {
       name: this.elForm.querySelector("[name=name]").value,
     };
 
-    let response;
-
     if (this.currentItem) {
-      response = await Api.updateItem(this.currentItem.id, payload);
+      dispatch(EVENTS.UPDATE_ITEM, {
+        id: this.currentItem.id,
+        payload,
+        onComplete: this.onItemUpdated,
+      });
     } else {
-      response = await Api.createItem(payload);
+      dispatch(EVENTS.ADD_ITEM, { payload, onComplete: this.onItemUpdated });
     }
+  };
 
-    console.log(response);
-
-    const { error, success } = response;
-
+  onItemUpdated = ({ success }) => {
     dispatch(EVENTS.SHOW_LOADING, false);
 
     if (success === true) {

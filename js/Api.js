@@ -5,48 +5,31 @@ class Api {
   token = localStorage.getItem(TOKEN_NAME);
   user;
 
-  get = async (url) => {
-    const response = await fetch(`${API_URL}${url}`, {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-      },
-      method: "GET",
-    });
+  request = async ({ method, payload, url, useAuth = true }) => {
+    let body;
+    let headers = {};
 
-    return await response.json();
-  };
-
-  post = async (url, payload, withAuth = true) => {
-    const headers = {
-      "Content-Type": "application/json",
-    };
-
-    if (withAuth) {
+    if (useAuth) {
       headers.Authorization = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${API_URL}${url}`, {
-      body: JSON.stringify(payload),
-      headers,
-      method: "POST",
-    });
+    if (method === "PATCH" || method === "POST") {
+      headers["Content-Type"] = "application/json";
+    }
 
-    return await response.json();
-  };
-
-  patch = async (url, payload) => {
-    const headers = {
-      Authorization: `Bearer ${this.token}`,
-      "Content-Type": "application/json",
-    };
+    if (payload) {
+      body = JSON.stringify(payload);
+    }
 
     const response = await fetch(`${API_URL}${url}`, {
-      body: JSON.stringify(payload),
+      body,
       headers,
-      method: "PATCH",
+      method,
     });
 
-    return await response.json();
+    if (method !== "DELETE") {
+      return await response.json();
+    }
   };
 
   isSignedIn = () => {
@@ -67,8 +50,24 @@ class Api {
     this.token = token;
   };
 
-  getUser = () => {
-    return this.user;
+  getUser = async () => {
+    if (this.user) {
+      return this.user;
+    } else {
+      const { data, error } = await this.request({
+        method: "GET",
+        url: "/users/me",
+      });
+
+      if (data) {
+        this.setUser(data);
+      }
+
+      return {
+        success: !error,
+        error,
+      };
+    }
   };
 
   setUser = (user) => {
@@ -76,11 +75,12 @@ class Api {
   };
 
   signIn = async (payload) => {
-    const { data, error } = await this.post(
-      "/auth/authenticate",
+    const { data, error } = await this.request({
+      method: "POST",
       payload,
-      false
-    );
+      url: "/auth/authenticate",
+      useAuth: false,
+    });
 
     if (data) {
       this.setToken(data.token);
@@ -91,11 +91,24 @@ class Api {
   };
 
   signOut = async () => {
-    await this.post("/auth/logout", false);
+    await this.request({
+      method: "POST",
+      url: "/auth/logout",
+      useAuth: false,
+    });
     this.removeToken();
     this.setUser(null);
 
     return { success: true };
+  };
+
+  addItem = (data) => {
+    this.items.all.push(data);
+    this.items.byId[data.id] = data;
+  };
+
+  getItem = (id) => {
+    return this.items.byId[id];
   };
 
   getItems = async () => {
@@ -103,7 +116,10 @@ class Api {
     if (this.items) {
       return this.items.all;
     } else {
-      const response = await this.get("/items/items");
+      const response = await this.request({
+        method: "GET",
+        url: `/items/items`,
+      });
       let data;
 
       if (response.data) {
@@ -113,8 +129,7 @@ class Api {
         };
 
         response.data.forEach((element) => {
-          this.items.all.push(element);
-          this.items.byId[element.id] = element;
+          this.addItem(element);
         });
 
         data = this.items.all;
@@ -128,21 +143,39 @@ class Api {
   };
 
   createItem = async (payload) => {
-    const { data, error } = await this.post("/items/items", payload);
+    const { data, error } = await this.request({
+      method: "POST",
+      payload,
+      url: `/items/items`,
+    });
 
     if (data) {
-      this.items.all.push(data);
-      this.items.byId[data.id] = data;
+      this.addItem(data);
     }
 
     return {
-      success: !error,
+      item: data,
       error,
     };
   };
 
+  deleteItem = async (payload) => {
+    await this.request({
+      method: "DELETE",
+      url: `/items/items/${payload}`,
+    });
+
+    return {
+      success: true,
+    };
+  };
+
   updateItem = async (id, payload) => {
-    const { data, error } = await this.patch(`/items/items/${id}`, payload);
+    const { data, error } = await this.request({
+      method: "PATCH",
+      payload,
+      url: `/items/items/${id}`,
+    });
 
     if (data) {
       this.items.all = this.items.all.map((element) => {
@@ -156,7 +189,7 @@ class Api {
     }
 
     return {
-      data,
+      item: data,
       error,
     };
   };

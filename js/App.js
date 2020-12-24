@@ -7,64 +7,32 @@ import Loading from "./components/Loading.js";
 import { dispatch } from "./utils.js";
 
 class App {
-  elAddItemBtn;
   loading = new Loading();
   home = new Home();
   signIn = new SignIn();
   updateItem = new UpdateItem();
 
-  start = () => {
-    console.log("start");
+  start = async () => {
     window.addEventListener(EVENTS.LOAD, this.onLoad);
     window.addEventListener(EVENTS.ROUTE_CHANGE, this.onRouteChange);
     window.addEventListener(EVENTS.SHOW_LOADING, this.onShowLoading);
     window.addEventListener(EVENTS.TOGGLE_VIEW, this.onViewChange);
 
-    this.elAddItemBtn = document.querySelector("#add-item-btn");
-    this.elAddItemBtn.addEventListener("click", this.onAddItem);
+    const { success } = await Api.getUser();
+    let route = ROUTES.SIGN_IN;
 
-    this.elSignOutBtn = document.querySelector("#sign-out-btn");
-    this.elSignOutBtn.addEventListener("click", this.onSignOut);
-
-    dispatch(EVENTS.ROUTE_CHANGE, {
-      route: Api.isSignedIn() ? ROUTES.HOME : ROUTES.SIGN_IN,
-    });
-  };
-
-  onAddItem = (evt) => {
-    evt.preventDefault();
-
-    dispatch(EVENTS.TOGGLE_VIEW, {
-      show: true,
-      view: VIEWS.UPDATE_ITEM,
-    });
-  };
-
-  onSignOut = async (evt) => {
-    evt.preventDefault();
-
-    dispatch(EVENTS.SHOW_LOADING, true);
-
-    const { success } = await Api.signOut();
-
-    console.log(success);
-
-    dispatch(EVENTS.SHOW_LOADING, false);
-
-    if (success === true) {
-      dispatch(EVENTS.ROUTE_CHANGE, {
-        route: ROUTES.SIGN_IN,
-      });
+    if (success) {
+      route = ROUTES.HOME;
     }
+
+    dispatch(EVENTS.ROUTE_CHANGE, { route });
   };
 
   onRouteChange = ({ detail: { params, route } }) => {
-    console.log("onRouteChange:", params, route);
     this.setRoute({ params, route });
   };
 
   onViewChange = ({ detail: { params, show, view } }) => {
-    console.log("onViewChange:", params, show, view);
     this.setView({ params, show, view });
   };
 
