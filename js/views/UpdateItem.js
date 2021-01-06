@@ -1,4 +1,4 @@
-import Api from "../Api.js";
+import Store from "../Store.js";
 import { EVENTS, VIEWS } from "../constants.js";
 import { dispatch } from "../utils.js";
 
@@ -27,7 +27,7 @@ class UpdateItem {
     this.el.classList.add("show");
 
     if (params.id) {
-      this.currentItem = Api.getItem(params.id);
+      this.currentItem = Store.getItem(params.id);
       console.log(this.currentItem);
       this.el.querySelector("[name=name]").value = this.currentItem.name;
       this.datePicker.setDate(parseInt(this.currentItem.date));

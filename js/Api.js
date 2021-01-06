@@ -1,197 +1,121 @@
 import { API_URL, TOKEN_NAME } from "./config.js";
 
 class Api {
-  items;
-  token = localStorage.getItem(TOKEN_NAME);
-  user;
+  axios;
+  MODE = "cookie";
 
-  request = async ({ method, payload, url, useAuth = true }) => {
-    let body;
-    let headers = {};
-
-    if (useAuth) {
-      headers.Authorization = `Bearer ${this.token}`;
-    }
-
-    if (method === "PATCH" || method === "POST") {
-      headers["Content-Type"] = "application/json";
-    }
-
-    if (payload) {
-      body = JSON.stringify(payload);
-    }
-
-    const response = await fetch(`${API_URL}${url}`, {
-      body,
-      headers,
-      method,
+  constructor() {
+    console.log(API_URL);
+    this.axios = axios.create({
+      baseURL: API_URL,
     });
+  }
 
-    if (method !== "DELETE") {
-      return await response.json();
+  get token() {
+    return this.axios.defaults.headers?.Authorization?.split(" ")[1] || null;
+  }
+
+  set token(val) {
+    this.axios.defaults.headers = {
+      ...(this.axios.defaults.headers || {}),
+      Authorization: val ? `Bearer ${val}` : undefined,
+    };
+  }
+
+  async signIn(credentials) {
+    try {
+      const response = await this.axios.post("/auth/authenticate", {
+        ...credentials,
+        mode: this.MODE,
+      });
+
+      console.log(response);
+
+      this.token = response.data.data.access_token;
+
+      setTimeout(() => {
+        this.refresh();
+      }, response.data.data.expires - 10000);
+
+      return response.data;
+    } catch (err) {
+      // Handle Error Here
+      console.error(err);
     }
-  };
+  }
+
+  async refresh() {
+    console.log("refresh");
+    const payload = { mode: this.MODE };
+
+    const response = await this.axios.post("/auth/refresh", payload);
+
+    this.token = response.data.data.access_token;
+
+    setTimeout(() => {
+      this.refresh();
+    }, response.data.data.expires - 10000);
+
+    return response.data;
+  }
+
+  async logout() {
+    await this.axios.post("/auth/logout");
+    this.token = null;
+  }
 
   isSignedIn = () => {
     return this.token !== null;
   };
 
-  getToken = () => {
-    return this.token;
-  };
-
-  removeToken = () => {
-    localStorage.removeItem(TOKEN_NAME);
-    this.token = null;
-  };
-
-  setToken = (token) => {
-    localStorage.setItem(TOKEN_NAME, token);
-    this.token = token;
-  };
-
   getUser = async () => {
-    if (this.user) {
-      return this.user;
-    } else {
-      const { data, error } = await this.request({
-        method: "GET",
-        url: "/users/me",
-      });
+    try {
+      const response = await this.axios.get("/users/me");
 
-      if (data) {
-        this.setUser(data);
-      }
-
-      return {
-        success: !error,
-        error,
-      };
+      return { data: response.data };
+    } catch (error) {
+      return { error };
     }
-  };
-
-  setUser = (user) => {
-    this.user = user;
-  };
-
-  signIn = async (payload) => {
-    const { data, error } = await this.request({
-      method: "POST",
-      payload,
-      url: "/auth/authenticate",
-      useAuth: false,
-    });
-
-    if (data) {
-      this.setToken(data.token);
-      this.setUser(data.user);
-    }
-
-    return { error, success: !error };
-  };
-
-  signOut = async () => {
-    await this.request({
-      method: "POST",
-      url: "/auth/logout",
-      useAuth: false,
-    });
-    this.removeToken();
-    this.setUser(null);
-
-    return { success: true };
-  };
-
-  addItem = (data) => {
-    this.items.all.push(data);
-    this.items.byId[data.id] = data;
-  };
-
-  getItem = (id) => {
-    return this.items.byId[id];
   };
 
   getItems = async () => {
-    // cached so return existing
-    if (this.items) {
-      return this.items.all;
-    } else {
-      const response = await this.request({
-        method: "GET",
-        url: `/items/items`,
-      });
-      let data;
+    try {
+      const response = await this.axios.get("/items/items");
 
-      if (response.data) {
-        this.items = {
-          all: [],
-          byId: {},
-        };
+      console.log("getItems", response);
 
-        response.data.forEach((element) => {
-          this.addItem(element);
-        });
-
-        data = this.items.all;
-      }
-
-      return {
-        data,
-        error: response.error,
-      };
+      return response;
+    } catch (error) {
+      return { error };
     }
   };
 
   createItem = async (payload) => {
-    const { data, error } = await this.request({
-      method: "POST",
-      payload,
-      url: `/items/items`,
-    });
+    try {
+      const response = await this.axios.post("/items/items", payload);
 
-    if (data) {
-      this.addItem(data);
+      console.log("createItem", response);
+
+      return response;
+    } catch (error) {
+      return { error };
     }
-
-    return {
-      item: data,
-      error,
-    };
   };
 
   deleteItem = async (payload) => {
-    await this.request({
-      method: "DELETE",
-      url: `/items/items/${payload}`,
-    });
+    const response = await this.axios.delete(`/items/items/${payload}`);
 
-    return {
-      success: true,
-    };
+    console.log("deleteItem", response);
+
+    return response;
   };
 
   updateItem = async (id, payload) => {
-    const { data, error } = await this.request({
-      method: "PATCH",
-      payload,
-      url: `/items/items/${id}`,
-    });
+    const response = await this.axios.patch(`/items/items/${id}`, payload);
 
-    if (data) {
-      this.items.all = this.items.all.map((element) => {
-        if (element.id === data.id) {
-          return data;
-        } else {
-          return element;
-        }
-      });
-      this.items.byId[data.id] = data;
-    }
+    console.log("updateItem", response);
 
-    return {
-      item: data,
-      error,
-    };
+    return response;
   };
 }
 

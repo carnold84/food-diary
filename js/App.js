@@ -1,4 +1,4 @@
-import Api from "./Api.js";
+import Store from "./Store.js";
 import Home from "./routes/Home.js";
 import SignIn from "./routes/SignIn.js";
 import UpdateItem from "./views/UpdateItem.js";
@@ -18,7 +18,7 @@ class App {
     window.addEventListener(EVENTS.SHOW_LOADING, this.onShowLoading);
     window.addEventListener(EVENTS.TOGGLE_VIEW, this.onViewChange);
 
-    const { success } = await Api.getUser();
+    const { success } = await Store.getUser();
     let route = ROUTES.SIGN_IN;
 
     if (success) {

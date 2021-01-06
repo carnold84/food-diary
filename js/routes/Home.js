@@ -1,4 +1,4 @@
-import Api from "../Api.js";
+import Store from "../Store.js";
 import Item from "../components/Item.js";
 import { EVENTS, ROUTES, VIEWS } from "../constants.js";
 import { dispatch } from "../utils.js";
@@ -60,7 +60,7 @@ class Home {
 
     dispatch(EVENTS.SHOW_LOADING, true);
 
-    const { success } = await Api.signOut();
+    const { success } = await Store.signOut();
 
     dispatch(EVENTS.SHOW_LOADING, false);
 
@@ -72,7 +72,7 @@ class Home {
   };
 
   onAddItem = async ({ detail: { payload, onComplete } }) => {
-    let { error, item } = await Api.createItem(payload);
+    let { error, item } = await Store.createItem(payload);
 
     if (onComplete) {
       onComplete({ success: !error });
@@ -84,7 +84,7 @@ class Home {
   };
 
   onUpdateItem = async ({ detail: { id, payload, onComplete } }) => {
-    let { error, item } = await Api.updateItem(id, payload);
+    let { error, item } = await Store.updateItem(id, payload);
 
     if (onComplete) {
       onComplete({ success: !error });
@@ -98,7 +98,7 @@ class Home {
   onDeleteItem = async ({ detail: { id } }) => {
     dispatch(EVENTS.SHOW_LOADING, true);
 
-    const { success } = await Api.deleteItem(id);
+    const { success } = await Store.deleteItem(id);
 
     if (success) {
       const item = this.items.byId[id];
@@ -132,7 +132,7 @@ class Home {
   loadItems = async () => {
     dispatch(EVENTS.SHOW_LOADING, true);
 
-    const { data, error } = await Api.getItems();
+    const { data, error } = await Store.getItems();
 
     dispatch(EVENTS.SHOW_LOADING, false);
 

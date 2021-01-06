@@ -1,4 +1,4 @@
-import Api from "../Api.js";
+import Store from "../Store.js";
 import { EVENTS, ROUTES } from "../constants.js";
 import { dispatch } from "../utils.js";
 
@@ -36,7 +36,7 @@ class SignIn {
       password: this.elForm.querySelector("[name=password]").value,
     };
 
-    const { error, success } = await Api.signIn(credentials);
+    const { error, success } = await Store.signIn(credentials);
 
     this.el.classList.remove("show");
     dispatch(EVENTS.SHOW_LOADING, false);
